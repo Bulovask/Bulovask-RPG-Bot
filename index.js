@@ -1,22 +1,25 @@
 require('dotenv').config();
 const bot = require('./config/bot');
-const { FICHASPERSONAGENS, AREADECRIACAO } = require('./config/topicos');
+const { FICHASPERSONAGENS, AREADECRIACAO, EFEITOS, MAGIAS, ITENS, HISTORIAGERAL } = require('./config/topicos');
+const amt = require('./controllers/apagarMensagensEmTopicos');
+const personagem = require('./controllers/personagem');
+
+const topicosRestritos = [
+  FICHASPERSONAGENS,
+  EFEITOS,
+  MAGIAS,
+  ITENS,
+  HISTORIAGERAL
+];
 
 bot.on('message', (msg) => {
   const chatId = msg.chat.id;
   if(!bot.validarChat(msg)) return;
 
-  bot.seTopico(msg, FICHASPERSONAGENS, msg => {
-    const mensagem = `AVISO!\n<a href='tg://user?id=${msg.from.id}'>@${msg.from.username}</a>, ` +
-    'não lhe é permitido enviar mensagens no tópico Fichas de Personagem.';
+  // Apagar últimas mensagens de usuários em certos tópicos
+  bot.seTopico(msg, topicosRestritos, amt.apagarUltimaMensagem);
 
-    bot.deleteMessage(msg.chat.id, msg.message_id);
-    bot.sendMessage(msg.chat.id, mensagem, { parse_mode: 'html' });
-  });
-
-  bot.seTopicoETexto(msg, AREADECRIACAO, '/novo_personagem', msg => {
-    bot.sendMessage(chatId, 'Ótimo! Vamos criar seu personagem kkk', {message_thread_id: msg.message_thread_id});
-  });
+  bot.seTopicoETexto(msg, AREADECRIACAO, '/novo_personagem', personagem.novo);
 
   // console.log(msg.message_thread_id);
  
@@ -27,5 +30,5 @@ bot.on('message', (msg) => {
 
 // Tratar erros
 bot.on('polling_error', (error) => {
-  console.error(`Polling error: ${error.code} - ${error.message}`);
+  console.error(`Polling error: ${error.code} - ${error.message} - ${error.stack}`);
 });

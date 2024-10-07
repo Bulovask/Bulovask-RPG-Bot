@@ -4,6 +4,8 @@ const bot = new TelegramBot(token, { polling: true });
 
 module.exports = bot;
 
+module.exports.criandos = {}
+
 module.exports.validarChat = msg => {
   if(msg.chat.id == process.env.ID_GROUP_TELEGRAM) return true;
   if(msg.chat.type != 'private') bot.leaveChat(msg.chat.id)
@@ -12,13 +14,16 @@ module.exports.validarChat = msg => {
 }
 
 module.exports.seTopico = (msg, idTopico, func) => {
-  if(msg.message_thread_id == idTopico) func(msg);
+  const lista = Array.isArray(idTopico) ? idTopico : [idTopico];
+  lista.forEach(id => {
+    if(msg.message_thread_id == id) func(bot, msg);
+  });
 }
 
 module.exports.seTexto = (msg, texto, func) => {
-  if(msg.text == texto) func(msg);
+  if(msg.text == texto) func(bot, msg);
 }
 
 module.exports.seTopicoETexto = (msg, idTopico, texto, func) => {
-  module.exports.seTopico(msg, idTopico, module.exports.seTexto(msg, texto, msg => func(msg)));
+  module.exports.seTopico(msg, idTopico, (bot, msg) => module.exports.seTexto(msg, texto, (bot, msg) => func(bot, msg)));
 }
